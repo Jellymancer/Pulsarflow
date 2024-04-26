@@ -1,0 +1,2 @@
+pointing_id,beam_id,filterbank_files,target,beam_num,utc_start
+0,0,/beegfs/PROCESSING/USER_SCRATCH/jjawor/clean_files/ngc2808_2024-03-12-17:03:34_cfbf00000_01.fil,ngc2808,cfbf00000,2024-03-12 17:03:34
