@@ -13,7 +13,7 @@ process filtool {
     val(channel_mask)
 
     output:
-    path("${outputFile}.fil")
+    val("${inputFile}_${utc_start}_${beam_num}_clean.fil")
     
 
     script:
