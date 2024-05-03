@@ -30,7 +30,7 @@ process peasoup {
     val(kill_file)
 
     output:
-    tuple val(beam_name), val(utc), path("**/*.xml")
+    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path("**/*.xml")
 
     script:
     """
@@ -53,17 +53,18 @@ process fold_peasoup_cands_pulsarx {
     publishDir "FOLDING/${utc}/${target_name}/${beam_name}/${dm_file.baseName}/", pattern: "*.{ar,png,xml,candfile,cands}", mode: 'symlink'
 
     input:
-    tuple val(BEAM), val(UTC_OBS), path(xml_file)
+    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(xml_file)
 
     output:
     tuple path("*.ar"), path("*.png")
 
     script:
     """
-    python3 ${params.fold_script} -i ${xml_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${BEAM} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -c ${params.cmask}
+    python3 ${params.fold_script} -i ${xml_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -c ${params.cmask}
     """
 
 }
+
 
 
 workflow {
