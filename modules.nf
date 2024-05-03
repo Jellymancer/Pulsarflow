@@ -3,28 +3,27 @@ process filtool {
     container "${params.pulsarx_singularity_image}"
 
     input:
-    val(inputFile)
-    val(source_name)
-    val(beam_num)
-    val(utc_start)
+    val(filterbank_channel_with_metadata)
     val rfi_filter
     val threads
     val telescope
     val(channel_mask)
 
     output:
-    val("${inputFile}_${utc_start}_${beam_num}_clean.fil")
+    tuple val(filterbank_channel_with_metadata), path("*.fil")
     
 
     script:
-    def outputFile = "${inputFile}_${utc_start}_${beam_num}_clean"
+    def outputFile = "${filterbank_channel_with_metadata[1].trim()}_${filterbank_channel_with_metadata[3].trim()}_${filterbank_channel_with_metadata[2].trim()}_clean"
+    def inputFile = "${filterbank_channel_with_metadata[0].trim()}"
+    def source_name = "${filterbank_channel_with_metadata[1].trim()}"
     """
     # Get the first file from the input_data string
     first_file=\$(echo ${inputFile} | awk '{print \$1}')
 
     # Extract the file extension from the first file
     file_extension="\$(basename "\${first_file}" | sed 's/.*\\.//')"
-    
+
     # Prepare the rfi mask options
     mask_option=""
     if [[ -n "${channel_mask}" ]]; then
@@ -47,13 +46,13 @@ process filtool {
 
 process nearest_power_of_two_calculator {
     label 'nearest_power_two'
-    container "${params.fold_singularity_image}"
+    container "${params.pulsarx_singularity_image}"
 
     input:
-    path(fil_file)
+    tuple path(fil_file), val(target_name), val(beam_name), val(utc_start)
 
     output:
-    env(nearest_power_of_2)
+    tuple path(fil_file), val(target_name), val(beam_name), val(utc_start), env(nearest_power_of_2)
 
     script:
     """
@@ -75,19 +74,19 @@ process nearest_power_of_two_calculator {
     """
 }
 
+
 process generateDMFiles {
 
     label 'generate_dm_files'
     container "${params.utility_singularity_image}"
 
-    input:
-    val(output_dm_dir)
+    // publishDir { "${params.dm_out_dir}" }, pattern: "*.txt", mode: 'copy'
 
     output:
-    val(output_dm_dir)
+    file("*.txt")
 
     script:
     """
-    python ${params.dm_create_script} -ds ${params.dm_start} -de ${params.dm_end} -n ${params.no_dm_splits} -s ${params.dm_step} -d ${params.dm_decimals} -r ${output_dm_dir}
+    python3 ${params.dm_create_script} -ds ${params.dm_start} -de ${params.dm_end} -n ${params.no_dm_splits} -s ${params.dm_step} -d ${params.dm_decimals}
     """
 }
