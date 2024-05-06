@@ -30,7 +30,7 @@ process filtool {
         IFS=',' read -ra ADDR <<< "${channel_mask}"
         for i in "\${ADDR[@]}"; do
             IFS=':' read -ra PAIR <<< "\$i"
-            mask_option+=" --rfi \${PAIR[0]} \${PAIR[1]}"
+            mask_option+=" --rfi zap \${PAIR[0]} \${PAIR[1]}"
         done
     fi
 
