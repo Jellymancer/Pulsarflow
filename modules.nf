@@ -46,7 +46,8 @@ process filtool {
 
 process nearest_power_of_two_calculator {
     label 'nearest_power_two'
-    container "${params.pulsarx_singularity_image}"
+    container "${params.old_pulsarx_singularity_image}"
+    stageOutMode 'move'
 
     input:
     tuple path(fil_file), val(target_name), val(beam_name), val(utc_start)

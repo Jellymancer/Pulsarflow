@@ -9,14 +9,11 @@ include { nearest_power_of_two_calculator as nearest_power_of_two_calculator_aps
 include { generateDMFiles as generateDMFiles } from './modules'
 
 
-
-
-
 process peasoup {
     label 'peasoup'
     container "${params.search_singularity_image}"
-
-    publishDir { "/SEARCH/${utc}/${target_name}/${beam_name}/${dm_file.baseName}" }, pattern: "**/*.xml", mode: 'copy'
+    stageOutMode 'move'
+    publishDir { "SEARCH/${utc}/${target_name}/${beam_name}/${dm_file.baseName}" }, pattern: "**/*.xml", mode: 'copy'
 
     input:
     tuple path(fil_file), val(target_name), val(beam_name), val(utc), val(fft_size), path(dm_file) 
@@ -30,7 +27,7 @@ process peasoup {
     val(kill_file)
 
     output:
-    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path("**/*.xml")
+    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(fil_file), path("**/*.xml")
 
     script:
     """
@@ -53,14 +50,14 @@ process fold_peasoup_cands_pulsarx {
     publishDir "FOLDING/${utc}/${target_name}/${beam_name}/${dm_file.baseName}/", pattern: "*.{ar,png,xml,candfile,cands}", mode: 'symlink'
 
     input:
-    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(xml_file)
+    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(fil_file), path(xml_file)
 
     output:
     tuple path("*.ar"), path("*.png")
 
     script:
     """
-    python3 ${params.fold_script} -i ${xml_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -c ${params.cmask}
+    python3 ${params.fold_script} -i ${xml_file} -if ${fil_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold}
     """
 
 }
@@ -103,7 +100,7 @@ workflow {
     // Generate DM files
     dm_files = generateDMFiles()
     dm_files_channel = Channel.fromPath("${params.dm_out_dir}/*.txt")
-    // dm_files_channel.view()
+    // dm_files_channel.view() 
 
     // Find the nearest power of two
     nearest_two_output = nearest_power_of_two_calculator_apsuse(updated_filterbank_channel)

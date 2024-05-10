@@ -136,6 +136,7 @@ def main():
     parser = argparse.ArgumentParser(description='Fold all candidates from Peasoup xml file')
     parser.add_argument('-o', '--output_path', help='Output path to save results',  default=os.getcwd(), type=str)
     parser.add_argument('-i', '--input_file', help='Name of the input xml file', type=str)
+    parser.add_argument('-if', '--input_fil_file', help='Name of the input filterbank file', type=str)
     parser.add_argument('-m', '--mask_file', help='Mask file for prepfold', type=str)
     parser.add_argument('-t', '--fold_technique', help='Technique to use for folding (presto or pulsarx)', type=str, default='presto')
     parser.add_argument('-n', '--nh', help='Filter candidates with nh value', type=int, default=0)
@@ -145,7 +146,7 @@ def main():
     parser.add_argument('-nsub', '--nsubband', help='Number of subbands', type=int, default=64)
     parser.add_argument('-b', '--beam_name', help='Beam name string', type=str, default='cfbf00000')
     parser.add_argument('-utc', '--utc_beam', help='UTC beam name string', type=str, default='2024-01-01-00:00:00')
-    parser.add_argument('-c', '--chan_mask', help='Peasoup Channel mask file to be passed onto pulsarx', type=str, default='')
+    parser.add_argument('-c', '--chan_mask', help='Peasoup Channel mask file to be passed onto pulsarx', type=str, default=None)
     parser.add_argument('-threads', '--pulsarx_threads', help='Number of threads to be used for pulsarx', type=int, default='24')
     parser.add_argument('-pthreads', '--presto_threads', help='Number of threads to be used for prepfold', type=int, default='12')
     parser.add_argument('-p', '--pulsarx_fold_template', help='Fold template pulsarx', type=str, default='meerkat_fold.template')
@@ -164,7 +165,7 @@ def main():
     search_params = root[2]
     candidates = root[6]
     prepfold_threads = args.presto_threads
-    filterbank_file = str(search_params.find("infilename").text)
+    filterbank_file = args.input_fil_file
     tsamp = float(header_params.find("tsamp").text)
     fft_size = int(search_params.find("size").text)
     nsamples = int(root.find("header_parameters/nsamples").text)
@@ -202,8 +203,6 @@ def main():
             subint_length = args.subint_length
 
         fold_with_pulsarx(df, filterbank_file, tsamp, fft_size, source_name_prefix, tstart, args.fast_nbins, args.slow_nbins, subint_length, args.nsubband, args.utc_beam, args.beam_name, args.pulsarx_threads, PulsarX_Template,  args.chan_mask)
-
-
 
 
 if __name__ == "__main__":
