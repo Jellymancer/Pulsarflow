@@ -57,7 +57,7 @@ process fold_peasoup_cands_pulsarx {
 
     script:
     """
-    python3 ${params.fold_script} -i ${xml_file} -if ${fil_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold}
+    python3 ${params.fold_script} -i ${xml_file} -if ${fil_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -n ${params.psrfold_fil_nh}
     """
 
 }

@@ -128,7 +128,7 @@ def fold_with_pulsarx(df, input_filenames, tsamp, fft_size, source_name_prefix, 
                 raise Exception("Unable to parse channel mask: {}".format(
                     str(error)))
     #--rfi zap 1323 1384
-    script = "psrfold_fil --plotx -v -t {} --candfile {} -n {} {} {} --template {} --clfd 2.0  -L {} -f {} --rfi zdot {}-o {} --srcname {} --pepoch {}".format(
+    script = "psrfold_fil --plotx -v -t {} --candfile {} -n {} {} {} --template {} --clfd 2.0  -L {} -f {} --rfi zdot {} -o {} --srcname {} --pepoch {}".format(
               pulsarx_threads, pulsarx_predictor, nsubband, nbins_string, beam_tag, TEMPLATE, subint_length, input_filenames, zap_string, output_rootname, source_name_prefix, tstart)
     subprocess.check_output(script, shell=True)
     
