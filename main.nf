@@ -12,7 +12,7 @@ include { generateDMFiles as generateDMFiles } from './modules'
 process peasoup {
     label 'peasoup'
     container "${params.search_singularity_image}"
-    stageOutMode 'move'
+
     publishDir { "SEARCH/${utc}/${target_name}/${beam_name}/${dm_file.baseName}" }, pattern: "**/*.xml", mode: 'copy'
 
     input:
@@ -27,7 +27,7 @@ process peasoup {
     val(kill_file)
 
     output:
-    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(fil_file), path("**/*.xml")
+    tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(fil_file, followLinks: false), path("**/*.xml")
 
     script:
     """
@@ -53,7 +53,8 @@ process fold_peasoup_cands_pulsarx {
     tuple val(target_name), val(beam_name), val(utc), path(dm_file), path(fil_file), path(xml_file)
 
     output:
-    tuple path("*.ar"), path("*.png")
+    tuple path("*.ar"), path("*.png"), path("*.candfile"), path("*.cands")
+    path(xml_file)
 
     script:
     """
