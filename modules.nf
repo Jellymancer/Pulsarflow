@@ -2,6 +2,8 @@ process filtool {
     label 'filtool'
     container "${params.pulsarx_singularity_image}"
 
+    publishDir "out/CLEAN/${pointing_id}/", pattern: "*.fil", mode: 'symlink'
+
     input:
     val(filterbank_channel_with_metadata)
     val rfi_filter
@@ -14,7 +16,7 @@ process filtool {
     
 
     script:
-    def outputFile = "${filterbank_channel_with_metadata[1].trim()}_${filterbank_channel_with_metadata[3].trim()}_${filterbank_channel_with_metadata[2].trim()}_clean"
+    def outputFile = "${filterbank_channel_with_metadata[1].trim()}_${filterbank_channel_with_metadata[4].trim()}_${filterbank_channel_with_metadata[2].trim()}_${filterbank_channel_with_metadata[3].trim()}_clean"
     def inputFile = "${filterbank_channel_with_metadata[0].trim()}"
     def source_name = "${filterbank_channel_with_metadata[1].trim()}"
     """
@@ -32,12 +34,12 @@ process filtool {
             IFS=':' read -ra PAIR <<< "\$i"
             mask_option+=" --rfi zap \${PAIR[0]} \${PAIR[1]}"
         done
-    fi
+    fi0
 
     if [[ \${file_extension} == "sf" ]]; then
         filtool -psrfits --scloffs -t ${threads} --telescope ${telescope} \${mask_option} -z ${rfi_filter} -o ${outputFile} -f ${inputFile} -s ${source_name}
     else 
-        filtool -t ${threads} --telescope ${telescope} \${mask_option} -z ${rfi_filter} -o ${outputFile} -f ${inputFile} -s ${source_name}
+        filtool -t ${threads} --telescope ${telescope} \${mask_option} -z ${rfi_filter} -z zdot -o ${outputFile} -f ${inputFile} -s ${source_name}
     fi
 
     """
@@ -46,14 +48,13 @@ process filtool {
 
 process nearest_power_of_two_calculator {
     label 'nearest_power_two'
-    container "${params.old_pulsarx_singularity_image}"
-    stageOutMode 'move'
+    container "${params.bc_image}"
 
     input:
-    tuple path(fil_file), val(target_name), val(beam_name), val(utc_start)
+    tuple path(fil_file), val(split_id), val(target_name), val(pointing_id), val(beam_name), val(utc_start)
 
     output:
-    tuple path(fil_file), val(target_name), val(beam_name), val(utc_start), env(nearest_power_of_2)
+    tuple path(fil_file), val(split_id), val(target_name), val(pointing_id), val(beam_name), val(utc_start), env(nearest_power_of_2)
 
     script:
     """

@@ -1,0 +1,7 @@
+out
+FOLDING
+*.log*
+work
+.nextflow
+*.pyc
+*.meta

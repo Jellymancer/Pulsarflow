@@ -1,5 +1,39 @@
 pointing_id,beam_id,filterbank_files,target,beam_num,utc_start
-0,0,/hercules/results/jjawor/GC/NGC2808/data/NGC2808-01L-trapum_cfbf00000sub.fil,ngc2808,cfbf00000,2024-03-12 17:03:34
-0,0,/hercules/results/jjawor/GC/NGC2808/data/NGC2808-01L-trapum_cfbf00001sub.fil,ngc2808,cfbf00001,2024-03-12 17:03:34
-0,0,/hercules/results/jjawor/GC/NGC2808/data/NGC2808-01L-trapum_cfbf00002sub.fil,ngc2808,cfbf00002,2024-03-12 17:03:34
-0,0,/hercules/results/jjawor/GC/NGC2808/data/NGC2808-01L-trapum_cfbf00003sub.fil,ngc2808,cfbf00003,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00000_clean_01_kadane_subbanded.fil,ngc2808,cfbf00000,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00001_clean_01_kadane_subbanded.fil,ngc2808,cfbf00001,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00002_clean_01_kadane_subbanded.fil,ngc2808,cfbf00002,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00003_clean_01_kadane_subbanded.fil,ngc2808,cfbf00003,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00004_clean_01_kadane_subbanded.fil,ngc2808,cfbf00004,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00005_clean_01_kadane_subbanded.fil,ngc2808,cfbf00005,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00006_clean_01_kadane_subbanded.fil,ngc2808,cfbf00006,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00007_clean_01_kadane_subbanded.fil,ngc2808,cfbf00007,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00008_clean_01_kadane_subbanded.fil,ngc2808,cfbf00008,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00009_clean_01_kadane_subbanded.fil,ngc2808,cfbf00009,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00010_clean_01_kadane_subbanded.fil,ngc2808,cfbf00010,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00011_clean_01_kadane_subbanded.fil,ngc2808,cfbf00011,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00012_clean_01_kadane_subbanded.fil,ngc2808,cfbf00012,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00013_clean_01_kadane_subbanded.fil,ngc2808,cfbf00013,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00014_clean_01_kadane_subbanded.fil,ngc2808,cfbf00014,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00015_clean_01_kadane_subbanded.fil,ngc2808,cfbf00015,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00016_clean_01_kadane_subbanded.fil,ngc2808,cfbf00016,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00017_clean_01_kadane_subbanded.fil,ngc2808,cfbf00017,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00018_clean_01_kadane_subbanded.fil,ngc2808,cfbf00018,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00019_clean_01_kadane_subbanded.fil,ngc2808,cfbf00019,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00020_clean_01_kadane_subbanded.fil,ngc2808,cfbf00020,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00022_clean_01_kadane_subbanded.fil,ngc2808,cfbf00022,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00023_clean_01_kadane_subbanded.fil,ngc2808,cfbf00023,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00024_clean_01_kadane_subbanded.fil,ngc2808,cfbf00024,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00025_clean_01_kadane_subbanded.fil,ngc2808,cfbf00025,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00026_clean_01_kadane_subbanded.fil,ngc2808,cfbf00026,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00027_clean_01_kadane_subbanded.fil,ngc2808,cfbf00027,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00028_clean_01_kadane_subbanded.fil,ngc2808,cfbf00028,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00029_clean_01_kadane_subbanded.fil,ngc2808,cfbf00029,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00030_clean_01_kadane_subbanded.fil,ngc2808,cfbf00030,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00031_clean_01_kadane_subbanded.fil,ngc2808,cfbf00031,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00032_clean_01_kadane_subbanded.fil,ngc2808,cfbf00032,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00033_clean_01_kadane_subbanded.fil,ngc2808,cfbf00033,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00034_clean_01_kadane_subbanded.fil,ngc2808,cfbf00034,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00035_clean_01_kadane_subbanded.fil,ngc2808,cfbf00035,2024-03-12 17:03:34
+0,0,/hercules/results/jjawor/GC/NGC2808/data/cleaned_subbanded/ngc2808_2024-03-12-17:03:34_cfbf00036_clean_01_kadane_subbanded.fil,ngc2808,cfbf00036,2024-03-12 17:03:34
+
+
