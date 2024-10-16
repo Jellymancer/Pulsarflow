@@ -2,7 +2,7 @@ process filtool {
     label 'filtool'
     container "${params.pulsarx_singularity_image}"
 
-    publishDir "out/CLEAN/${pointing_id}/", pattern: "*.fil", mode: 'symlink'
+    publishDir "out/CLEAN/${filterbank_channel_with_metadata[2].trim()}/", pattern: "*.fil", mode: 'symlink'
 
     input:
     val(filterbank_channel_with_metadata)
@@ -34,7 +34,7 @@ process filtool {
             IFS=':' read -ra PAIR <<< "\$i"
             mask_option+=" --rfi zap \${PAIR[0]} \${PAIR[1]}"
         done
-    fi0
+    fi
 
     if [[ \${file_extension} == "sf" ]]; then
         filtool -psrfits --scloffs -t ${threads} --telescope ${telescope} \${mask_option} -z ${rfi_filter} -o ${outputFile} -f ${inputFile} -s ${source_name}

@@ -117,6 +117,7 @@ process fold_peasoup_cands_pulsarx {
     python3 ${params.fold_script} -i ${cand_file} -if ${fil_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -n ${params.psrfold_fil_nh} --snr_min ${params.min_snr_fold}  --metafile ${meta_file}
     
     # Get the base name of the fil_file
+    echo "qwer"
     CANDSFILE=*.cands
     BASECANDSFILE=\$(basename \${CANDSFILE})
     NEWCANDFILE="\${BASECANDSFILE%.*}".candfile
@@ -135,11 +136,10 @@ process classify_candidates {
     tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path(archives), path(pngs), path(candfiles), path(cands)
 
     output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path(archives), path(pngs), path(candfiles), path(cands), path("*.csv")
+    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path("*.csv")
 
     script:
     """
-    echo "qq"
     python2 "${params.classify_script}" -m ${params.model_dir}
     """
 }
@@ -150,7 +150,7 @@ process create_tar_archive {
     publishDir "out/TAR/${target_name}/${split_id}/${pointing_id}/", pattern: "out/*.tar", mode: 'copy'
 
     input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path(archives), path(pngs), path(candfiles), path(cands), path(full_candfile)
+    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path(full_candfile)
     path(metafile)
 
     output:
@@ -216,7 +216,9 @@ workflow {
                 }
             }
     } else
-        split_filterbank_files = updated_filterbank_channel
+        split_filterbank_files = updated_filterbank_channel.map {filepath, target, pointing_id, beam_name, utc_start ->
+            return tuple(filepath, 0, target, pointing_id, beam_name, utc_start)
+        }
 
     
     // Generate DM files
@@ -227,7 +229,7 @@ workflow {
         return tuple(dm_file, dm_file_name)
     }
 
-
+    split_filterbank_files.view()
     // Find the nearest power of two
     nearest_two_output = nearest_power_of_two_calculator_apsuse(split_filterbank_files)
     
@@ -271,9 +273,9 @@ aggregated_peasoup_output = aggregate_peasoup_output(grouped_peasoup_output)
 
     // Aggregate based Sift the candidates
     // aggregated_peasoup_output.collect().set { collected_peasoup_output }
-    sifted_candidates = sift_candidates(aggregated_peasoup_output)
+    // sifted_candidates = sift_candidates(aggregated_peasoup_output)
     // aggregated_peasoup_output.view()
-    to_fold = sifted_candidates
+    to_fold = aggregated_peasoup_output
     .flatMap { tuple ->
         def(target_name, pointing_id, split_id, dm_range, beam_names, utc, fil_files, cand_file, meta_file) = tuple
 

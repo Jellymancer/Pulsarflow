@@ -12,7 +12,7 @@ def get_isot_from_mjd(mjd):
     return Time(mjd, format='mjd', scale='utc').isot
 
 def get_utc_from_filterbank_name(filterbank_name):
-    datepart = filterbank_name.split("_")[2]
+    datepart = filterbank_name.split("_")[1]
     return datepart[:10] + datepart[10].replace("-", "T") + datepart[11:]
 
 def parse_cands(input_filename):
