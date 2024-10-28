@@ -129,7 +129,7 @@ workflow {
             def fil_base_name = fil_file.getBaseName()
             return tuple(fil_base_name, target_name, pointing_id, split_id, dm_range, beam_name, utc, dm_file, fil_file, xml_file)
         }
-
+    //
     // Aggreagate the peasoup output based on pointing_id and beam name. 
     // This essentially aggregates all candidates from the different DM subdivisions
     grouped_peasoup_output = peasoup_no_filname.combine(unique_fil_name, by: 0)
