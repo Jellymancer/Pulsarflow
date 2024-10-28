@@ -1,2 +1,4 @@
-pointing_id,beam_id,filterbank_files,target,beam_num,utc_start
-0,0,/beegfs/PROCESSING/USER_SCRATCH/jjawor/clean_files/ngc2808_2024-03-12-17:03:34_cfbf00000_01.fil,ngc2808,cfbf00000,2024-03-12 17:03:34
+pointing_id,beam_id,filterbank_files,target,beam_num,metafile,utc_start
+1000,0,/hercules/results/jjawor/GC/test_data/ngc2808_2024-03-12-17:03:34_cfbf00000_clean_01_test.fil,ngc2808,cfbf00000,2024-03-12 17:03:34
+1000,1,/hercules/results/jjawor/GC/test_data/ngc2808_2024-03-12-17:03:34_cfbf00001_clean_01_test.fil,ngc2808,cfbf00001,2024-03-12 17:03:34
+1001,2,/hercules/results/jjawor/GC/test_data/ngc2808_2024-03-12-17:03:34_cfbf00002_clean_01_test.fil,ngc2808,cfbf00002,2024-03-12 17:03:34
