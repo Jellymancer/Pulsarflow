@@ -1,5 +1,4 @@
-pointing_id,beam_id,filterbank_files,target,beam_num,utc_start
-0,0,/hercules/results/jjawor/GC/NGC2808/observation2/candidate_followup/kadane_cleaned/PSR_A_NGC2808-02L-trapum_cfbf00013sub_kadane_01.fil,ngc2808,cfbf00013,2024-03-12 17:03:34
-0,0,/hercules/results/jjawor/GC/NGC2808/observation2/candidate_followup/kadane_cleaned/PSR_B_NGC2808-02L-trapum_cfbf00042sub_kadane_01.fil,ngc2808,cfbf00042,2024-03-12 17:03:34
-0,0,/hercules/results/jjawor/GC/NGC2808/observation2/candidate_followup/kadane_cleaned/PSR_C_NGC2808-02L-trapum_cfbf00081sub_kadane_01.fil,ngc2808,cfbf00081,2024-03-12 17:03:34
-0,0,/hercules/results/jjawor/GC/NGC2808/observation2/candidate_followup/kadane_cleaned/PSR_D_NGC2808-02L-trapum_cfbf00068sub_kadane_01.fil,ngc2808,cfbf00068,2024-03-12 17:03:34
+pointing_id,beam_id,filterbank_files,target,beam_num,metafile,utc_start
+1000,0,/hercules/results/jjawor/GC/test_data/ngc2808_2024-03-12-17:03:34_cfbf00000_clean_01_test.fil,ngc2808,cfbf00000,2024-03-12 17:03:34
+1000,1,/hercules/results/jjawor/GC/test_data/ngc2808_2024-03-12-17:03:34_cfbf00001_clean_01_test.fil,ngc2808,cfbf00001,2024-03-12 17:03:34
+1001,2,/hercules/results/jjawor/GC/test_data/ngc2808_2024-03-12-17:03:34_cfbf00002_clean_01_test.fil,ngc2808,cfbf00002,2024-03-12 17:03:34

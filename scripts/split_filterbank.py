@@ -23,7 +23,7 @@ def main(args):
         if args.outdir is None:
             output_filename = f"{i}_" + os.path.splitext(args.fil)[0] + f"_{start_sample}_{end_sample}.fil"
         else:
-            output_filename = f"{i}_" + os.path.join(args.outdir, os.path.splitext(args.fil)[0] + f"_{start_sample}_{end_sample}.fil")
+            output_filename = os.path.join(args.outdir, f"{i}_" + os.path.splitext(args.fil)[0] + f"_{start_sample}_{end_sample}.fil")
 
         output = filtools.FilterbankIO()
         output.header = input.header

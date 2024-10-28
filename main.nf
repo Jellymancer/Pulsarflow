@@ -3,164 +3,18 @@ nextflow.enable.dsl=2
 //In nextflow dsl2 syntax, you cannot re-use the same process multiple times. Instead we make modules and call them separate names for APSUSE and PTUSE to solve the corner case where you search and fold both PTUSE & APSUSE observations.
 
 include { filtool as filtool } from './modules'
-
 include { nearest_power_of_two_calculator as nearest_power_of_two_calculator_apsuse } from './modules'
-
 include { generateDMFiles as generateDMFiles } from './modules'
+include { calculate_max_acceleration as calculate_max_acceleration } from './modules'
+include { peasoup as peasoup } from './modules'
+include {split_filterbank as split_filterbank} from './modules'
+include {fold_peasoup_cands_pulsarx as fold_peasoup_cands_pulsarx} from './modules'
+include {aggregate_peasoup_output as aggregate_peasoup_output} from './modules'
+include {classify_candidates as classify_candidates} from './modules'
+include {create_tar_archive as create_tar_archive} from './modules'
+include {sift_candidates as sift_candidates} from './modules'
 
 
-process split_filterbank {
-    label 'split_filterbank'
-    container "${params.presto5_singularity_image}"
-    publishDir "out/SPLIT/${utc}/${target_name}/${beam_name}/", pattern: "*.fil", mode: 'symlink'
-
-    input:
-    tuple path(fil_file), val(target_name), val(pointing_id), val(beam_name), val(utc)
-    val split_blocks
-
-    output:
-    tuple path("*.fil"), val(target_name), val(pointing_id), val(beam_name), val(utc)
-
-    script:
-    """
-    python3 "${params.split_script}" ${fil_file} --nblocks ${split_blocks}
-    """
-}
-
-process peasoup {
-    label 'peasoup'
-    container "${params.search_singularity_image}"
-
-    publishDir { "out/SEARCH/${utc}/${target_name}/${beam_name}/${pointing_id}/${dm_file.baseName}" }, pattern: "*.xml", mode: 'copy'
-    input:
-    tuple path(fil_file), val(split_id), val(target_name), val(pointing_id), val(beam_name), val(utc), val(fft_size), path(dm_file), val(dm_range)
-    val(total_cands_limit)
-    val(min_snr)
-    val(acc_start)
-    val(acc_end)
-    val(ram_limit_gb)
-    val(nh)
-    val(ngpus)
-    val(kill_file)
-
-    output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(dm_file), path(fil_file, followLinks: false), path("*.xml")
-
-    script:
-    """
-    #!/bin/bash
-
-    if [ -z "$kill_file" ]; then
-        kill_file_option=\${kill_file ? "-k \${kill_file}" : ""}
-    else
-        kill_file_option=""
-    fi
-
-    peasoup -i ${fil_file} --fft_size ${fft_size} --limit ${total_cands_limit} -m ${min_snr} --acc_start ${acc_start} --acc_end ${acc_end} --dm_file ${dm_file} --ram_limit_gb ${ram_limit_gb} -n ${nh} -t ${ngpus} \$kill_file_option
-    
-    # Rename the output file
-    mv **/*.xml ${beam_name}_${dm_file.baseName}_overview.xml
-    """
-}
-
-
-process aggregate_peasoup_output {
-    label 'aggregate_peasoup_output'
-    container "${params.utility_singularity_image}"
-    publishDir "out/SEARCH/${utc}/${target_name}/${split_id}/${pointing_id}", pattern: "*.{csv, meta}", mode: 'copy'
-
-    stageInMode 'symlink'
-
-    input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file, stageAs: "?/*"), path(xml_files)
-
-    output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file),  path("*.csv"), path("*.meta")
-
-    script:
-    // join input on pointing_id
-    """
-    echo ""
-    python3 "${params.aggregate_script}"  ${xml_files}
-    """
-}
-
-process sift_candidates {
-    container "${params.utility_singularity_image}"
-    publishDir "out/SIFTING/${utc}/${target_name}/${split_id}/${pointing_id}/", pattern: "*.csv", mode: 'symlink'
-
-    input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_files, stageAs: "?/*"), path(cand_file), path(meta_file)
-
-    output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_files), path("*.csv"), path(meta_file)
-
-    script:
-    """
-    python3 ${params.sift_script} -c  /hercules/results/jjawor/GC/NGC2808/subband_followup/cfbf_test/sifting/default_config.json -m ${meta_file} ${cand_file}
-    """
-}
-
-process fold_peasoup_cands_pulsarx {
-    label 'pulsarx'
-    container "${params.pulsarx_singularity_image}"
-    publishDir "out/FOLDING/${utc}/${target_name}/${split_id}/${pointing_id}/${beam_name}/", pattern: "*.{ar,png,xml,candfile,cands}", mode: 'symlink'
-
-    input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file), path(cand_file), path(meta_file)
-
-    output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path("*.ar"), path("*.png"), path("*.candfile"), path("*.cands")
-
-    script:
-    """
-    python3 ${params.fold_script} -i ${cand_file} -if ${fil_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -n ${params.psrfold_fil_nh} --snr_min ${params.min_snr_fold}  --metafile ${meta_file}
-    
-    # Get the base name of the fil_file
-    echo "qwer"
-    CANDSFILE=*.cands
-    BASECANDSFILE=\$(basename \${CANDSFILE})
-    NEWCANDFILE="\${BASECANDSFILE%.*}".candfile
-    mv pulsarx.candfile \${NEWCANDFILE}
-
-    """
-
-}
-
-process classify_candidates {
-    label 'classify_candidates'
-    container "${params.old_pulsarx_singularity_image}"
-    publishDir "out/CLASSIFICATION/${target_name}/${split_id}/${pointing_id}/", pattern: "*.csv", mode: 'symlink'
-
-    input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path(archives), path(pngs), path(candfiles), path(cands)
-
-    output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path("*.csv")
-
-    script:
-    """
-    python2 "${params.classify_script}" -m ${params.model_dir}
-    """
-}
-
-process create_tar_archive {
-    label 'create_tar_archive'
-    container "${params.pulsarx_singularity_image}"
-    publishDir "out/TAR/${target_name}/${split_id}/${pointing_id}/", pattern: "out/*.tar", mode: 'copy'
-
-    input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path(full_candfile)
-    path(metafile)
-
-    output:
-    path("out/*.tar")
-
-    script:
-    """
-    python3 ${params.prepare_for_candyjar_script} -d \${PWD} -m ${metafile} -p ${pointing_id} -o \${PWD}/out 
-    """
-}
 
 workflow {
 
@@ -171,18 +25,19 @@ workflow {
             // Now each row is a Groovy map with column names as keys
             def filterbank_files = row.filterbank_files.trim() // Trim leading and trailing spaces
             def target = row.target.trim()
-            def beam_num = row.beam_num.trim()
+            def beam_id = row.beam_num.trim()
             def pointing_id = row.pointing_id.trim()
             def utc_start = row.utc_start.trim().replace(" ", "-") // Replace space with dash in utc_start
-            return tuple(filterbank_files, target, pointing_id, beam_num, utc_start)
+            return tuple(filterbank_files, target, pointing_id, beam_id, utc_start)
         }
 
     // Process the filterbank file with filtool
     if (params.use_filtool == 1) {
-        processed_filterbank = filtool(filterbank_channel_with_metadata, params.filtool_rfi_filter, params.filtool_threads, params.telescope, params.filtool_channel_mask)
+        processed_filterbank = filtool(filterbank_channel_with_metadata, params.filtool_rfi_filter_list,
+        params.filtool_rfi_channel_mask_pairs, params.filtool_threads, params.telescope)
     }
 
-    // Check if neither processing flags are set to 1
+    // Update the filterbank channel in case filtool is used
     if (params.use_filtool != 1) {
         updated_filterbank_channel = filterbank_channel_with_metadata
     } else {
@@ -216,6 +71,7 @@ workflow {
                 }
             }
     } else
+        // If splitting is not enabled, just use the updated filterbank channel, setting the split_id to 0
         split_filterbank_files = updated_filterbank_channel.map {filepath, target, pointing_id, beam_name, utc_start ->
             return tuple(filepath, 0, target, pointing_id, beam_name, utc_start)
         }
@@ -229,13 +85,25 @@ workflow {
         return tuple(dm_file, dm_file_name)
     }
 
-    split_filterbank_files.view()
     // Find the nearest power of two
     nearest_two_output = nearest_power_of_two_calculator_apsuse(split_filterbank_files)
-    
+
+    // Set an acceleration limit
+    if (params.calculate_max_accel == 1){
+        // Automatically calculate the max acceleration range based on the filterbank length
+        max_acceleration_output = calculate_max_acceleration(nearest_two_output)
+    }
+    else {
+        // If the max acceleration is manually set, use the provided value
+        max_acceleration_output = nearest_two_output.map { target_name, pointing_id, split_id, beam_name, utc, nearest_power_of_2 ->
+            return tuple(target_name, pointing_id, split_id, beam_name, utc, nearest_power_of_2, params.acc_start, params.acc_end)
+        }
+    }
+    // max_acceleration_output.view()  
     // Launch peasoup
-    peasoup_channel = nearest_two_output.combine(dm_files_channel)
-    peasoup_output = peasoup(peasoup_channel, params.total_cands_limit, params.min_snr, params.acc_start, params.acc_end, params.ram_limit_gb, params.nh, params.ngpus, params.kill_file)
+    peasoup_channel = max_acceleration_output.combine(dm_files_channel)
+    // peasoup_channel.view()
+    peasoup_output = peasoup(peasoup_channel, params.total_cands_limit, params.min_snr, params.ram_limit_gb, params.nh, params.ngpus, params.kill_file)
 
     unique_fil_name = peasoup_output
         .map { target_name, pointing_id, split_id, dm_range, beam_name, utc, dm_file, fil_file, xml_file ->
@@ -262,22 +130,27 @@ workflow {
             return tuple(fil_base_name, target_name, pointing_id, split_id, dm_range, beam_name, utc, dm_file, fil_file, xml_file)
         }
 
+    // Aggreagate the peasoup output based on pointing_id and beam name. 
+    // This essentially aggregates all candidates from the different DM subdivisions
     grouped_peasoup_output = peasoup_no_filname.combine(unique_fil_name, by: 0)
     .map {fil_base_name, target_name, pointing_id, split_id, dm_range, beam_name, utc, dm_file, fil_file, xml_file, first_fil_file->
         
         return tuple(target_name, pointing_id, split_id, dm_range, beam_name, utc, first_fil_file, xml_file)
     }.groupTuple(by: [0, 1, 2, 5])
+    // Convert the xmls into a single cvs file
+    aggregated_peasoup_output = aggregate_peasoup_output(grouped_peasoup_output)
 
-aggregated_peasoup_output = aggregate_peasoup_output(grouped_peasoup_output)
-// aggregated_peasoup_output.view()
-
-    // Aggregate based Sift the candidates
-    // aggregated_peasoup_output.collect().set { collected_peasoup_output }
-    // sifted_candidates = sift_candidates(aggregated_peasoup_output)
-    // aggregated_peasoup_output.view()
+    // Sifting
+    sifted_candidates = sift_candidates(aggregated_peasoup_output)
+    // sifted_candidates.view()
     to_fold = aggregated_peasoup_output
     .flatMap { tuple ->
         def(target_name, pointing_id, split_id, dm_range, beam_names, utc, fil_files, cand_file, meta_file) = tuple
+
+        // Convert `fil_files` and `dm_range` to lists if they are not already lists
+        fil_files = fil_files instanceof List ? fil_files : [fil_files]
+        dm_range = dm_range instanceof List ? dm_range : [dm_range]
+        beam_names = beam_names instanceof List ? beam_names : [beam_names]
 
         def result = []
         for (int i = 0; i < fil_files.size(); i++) {
@@ -286,10 +159,11 @@ aggregated_peasoup_output = aggregate_peasoup_output(grouped_peasoup_output)
         // fil_files.zip(beam_names).collect { fil_file, beam_name -> [target_name, pointing_id, split_id, beam_name, utc, fil_file, cand_file, meta_file] }
     return result
     }
-    // // Pulsarx folding
+
+    // Pulsarx folding
     pulsarx_output = fold_peasoup_cands_pulsarx(to_fold)
-//     // Classify candidates and create a TAR archive
-// val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path("*.ar"), path("*.png"), path("*.candfile"), path("*.cands")
+
+    // Now, we group all of the
     grouped_by_beam = pulsarx_output.groupTuple(by: [0, 1, 2])
     .map{target_name, pointing_id, split_id, dm_range, beam_names, utc, meta_files, archive_files, png_files, candfiles, cands_files ->
         def flat_archive_files = archive_files.flatten()
@@ -300,7 +174,7 @@ aggregated_peasoup_output = aggregate_peasoup_output(grouped_peasoup_output)
 
         return tuple(target_name, pointing_id, split_id, dm_range, beam_names, utc, meta_file, flat_archive_files, flat_png_files, flat_candfiles, flat_cands_files)
     }
-// grouped_by_beam.view()
+    grouped_by_beam.view()
 
     classified_candidates = classify_candidates(grouped_by_beam)
 
