@@ -151,6 +151,7 @@ process peasoup {
     peasoup -i ${fil_file} --fft_size ${fft_size} --limit ${total_cands_limit} -m ${min_snr} --acc_start ${acc_start} --acc_end ${acc_end} --dm_file ${dm_file} --ram_limit_gb ${ram_limit_gb} -n ${nh} -t ${ngpus} \$kill_file_option
     
     # Rename the output file
+    # The name is important for other processes. They assume that the file is named as beam_name_dm_range.xml
     mv **/*.xml ${beam_name}_${dm_file.baseName}_overview.xml
     """
 }
@@ -167,12 +168,11 @@ process aggregate_peasoup_output {
     tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file, stageAs: "?/*"), path(xml_files)
 
     output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file),  path("*.csv"), path("*.meta")
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(fil_file),  path("*.csv"), path("*.meta")
 
     script:
     // join input on pointing_id
     """
-    echo ""
     python3 "${params.aggregate_script}"  ${xml_files}
     """
 }
@@ -182,14 +182,14 @@ process sift_candidates {
     publishDir "out/SIFTING/${utc}/${target_name}/${split_id}/${pointing_id}/", pattern: "*.csv", mode: 'symlink'
 
     input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file), path(cand_file), path(meta_file)
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(fil_file), path(cand_file), path(meta_file)
 
     output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file), path("*.csv"), path(meta_file)
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(fil_file), path("*.csv"), path(meta_file)
 
     script:
     """
-    python3 ${params.sift_script} -c ${params.sift_default_config}  -m ${meta_file} ${cand_file}
+    python3 ${params.sift_script} -c ${params.sift_default_config}  -m ${meta_file} ${cand_file} 
     """
 }
 
@@ -199,17 +199,16 @@ process fold_peasoup_cands_pulsarx {
     publishDir "out/FOLDING/${utc}/${target_name}/${split_id}/${pointing_id}/${beam_name}/", pattern: "*.{ar,png,xml,candfile,cands}", mode: 'symlink'
 
     input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(fil_file), path(cand_file), path(meta_file)
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(fil_file), path(cand_file), path(meta_file)
 
     output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path("*.ar"), path("*.png"), path("*.candfile"), path("*.cands")
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path("*.ar"), path("*.png"), path("*.candfile"), path("*.cands")
 
     script:
     """
     python3 ${params.fold_script} -i ${cand_file} -if ${fil_file} -t pulsarx -p ${params.pulsarx_fold_template} -b ${beam_name} -threads ${params.psrfold_fil_threads} -ncands ${params.no_cands_to_fold} -n ${params.psrfold_fil_nh} --snr_min ${params.min_snr_fold}  --metafile ${meta_file}
     
     # Get the base name of the fil_file
-    echo "qwer"
     CANDSFILE=*.cands
     BASECANDSFILE=\$(basename \${CANDSFILE})
     NEWCANDFILE="\${BASECANDSFILE%.*}".candfile
@@ -222,34 +221,36 @@ process fold_peasoup_cands_pulsarx {
 process classify_candidates {
     label 'classify_candidates'
     container "${params.python2_singularity_image}"
-    publishDir "out/CLASSIFICATION/${target_name}/${split_id}/${pointing_id}/", pattern: "*.csv", mode: 'symlink'
+    publishDir "out/CLASSIFICATION/${target_name}/${split_id}/${pointing_id}/${beam_name}", pattern: "*.csv", mode: 'symlink'
 
     input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(meta_file), path(archives), path(pngs), path(candfiles), path(cands)
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands)
 
     output:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path("*.csv")
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path("*.csv")
 
     script:
+    OUT_NAME = "${target_name}_${pointing_id}_${split_id}_${beam_name}_scored.csv"
     """
-    python2 "${params.classify_script}" -m ${params.model_dir}
+    python2 ${params.classify_script} -m ${params.model_dir} -o ${OUT_NAME}
     """
 }
 
 process create_tar_archive {
     label 'create_tar_archive'
-    container "${params.pulsarx_singularity_image}"
-    publishDir "out/TAR/${target_name}/${split_id}/${pointing_id}/", pattern: "out/*.tar", mode: 'copy'
+    container "${params.utility_singularity_image}"
+    publishDir "out/TAR/${target_name}/${split_id}/${pointing_id}/", pattern: "out/*.gz", mode: 'copy'
 
     input:
-    tuple val(target_name), val(pointing_id), val(split_id), val(dm_range), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path(full_candfile)
+    tuple val(target_name), val(pointing_id), val(split_id), val(beam_name), val(utc), path(archives), path(pngs), path(candfiles), path(cands), path(full_candfile)
     path(metafile)
 
     output:
-    path("out/*.tar")
+    path("out/*.gz")
 
     script:
+    tarball_name = "${target_name}_${pointing_id}_${split_id}.tar.gz"
     """
-    python3 ${params.prepare_for_candyjar_script} -d \${PWD} -m ${metafile} -p ${pointing_id} -o \${PWD}/out 
+    python3 ${params.prepare_for_candyjar_script} -d \${PWD} -m ${metafile} -p ${pointing_id} -o \${PWD}/out  -n ${tarball_name}
     """
 }

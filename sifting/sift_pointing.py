@@ -8,7 +8,7 @@ import glob
 import shutil
 import argparse
 
-sys.path.append("/hercules/results/jjawor/GC/NGC2808/subband_followup/cfbf_test/sifting")
+# sys.path.append("/hercules/results/jjawor/GC/NGC2808/subband_followup/cfbf_test/sifting")
 import cluster_cands, spatial_rfi,\
     filtering, known_filter
 
@@ -159,25 +159,19 @@ def run_ewansifter(df_cands_ini, obs_meta_data, threshold, birdies=None, config=
     df_clusters = spatial_rfi.label_spatial_rfi(df_cands_clustered, config)
 
     # Label bad clusters
-    df_cands_filtered, df_clusters_filtered = filtering.filter_clusters(
-        df_cands_clustered, df_clusters, config, output)
+    to_fold = filtering.filter_clusters(df_cands_clustered, df_clusters,
+    config)
 
-    if psr_filter:
-        # Filter away known PSRs. WARNING: DOSEN'T WORK R/N
-        # Write out known pulsar file
-        df_cands_ini.iloc[known_psr_indices,:].to_csv(f"{output}_known_psr_cands.csv")
+    return to_fold
 
-        # Write out known pulsar harmonics file
-        df_cands_ini.iloc[known_ph_indices,:].to_csv(f"{output}_known_ph_cands.csv")
+def split_to_beams(pointing_df):
+    """Split a pointing wise candidate DataFrame into beam-wise DataFrames"""
 
-    # Write out reduced candidate list
-    # df_cands_filtered.to_csv(f"{output}_cands.csv")
-    # Write out cluster list
-    # df_clusters_filtered.to_csv(f"{output}_clusters.csv")
+    beam_names = pointing_df['beam_name'].unique()
 
-
-    return df_cands_filtered, df_clusters_filtered
-
+    for beam_name in beam_names:
+        beam_df = pointing_df[(pointing_df['beam_name'] == beam_name)]
+        beam_df.to_csv(f"{beam_name}_scored_candidates.csv")
 
 def main(args):
 
@@ -191,16 +185,17 @@ def main(args):
     with open(args.obs_meta) as f:
         obs_meta = json.load(f)
 
-
     try: 
         # Launch sifter
-        cands_df, cluster_df = run_ewansifter(base_cand_df, obs_meta,
-                                              threshold=args.threshold,
-                                              config=args.config)
+        to_fold = run_ewansifter(base_cand_df, obs_meta, threshold=args.threshold,
+                       config=args.config, output=args.outpath)
+
+        # Save the candidates that passed the sifting
+        split_to_beams(to_fold)
 
         # Apply thresholding to remove bad candidates
-        cands_df = filter_clusters_ewan(cands_df)
-        cands_df.to_csv(os.path.join(args.outpath, "candidates_scored.csv"))
+        # cands_df = filter_clusters_ewan(cands_df)
+        # cands_df.to_csv(os.path.join(args.outpath, "candidates_scored.csv"))
         # Create the pointing-wise score
         # scored_cluster_df = score_ewan_pointing(cluster_df)
 

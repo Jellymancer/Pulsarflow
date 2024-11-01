@@ -133,7 +133,12 @@ def create_row(root, candidates, file, file_index, fil_file):
         new_dict['file_index'] = file_index
         new_dict['file'] = file
         new_dict["fil_file"] = fil_file
+        # Grab the beam name from the XML file name
+        beam_name = os.path.basename(file).split('_')[0]
+        new_dict['beam_name'] = beam_name
         rows.append(new_dict)
+
+
     return rows
 
 def convert_to_deg(ra, dec):
@@ -175,6 +180,7 @@ parser.add_argument('--outdir', type=str, default=os.getcwd(),
                     help='Output directory for the aggregated DataFrame')
 parser.add_argument('--outfile', type=str, default='candidates.csv',
                     help='Name of the output file')
+
 args = parser.parse_args()
 
 if __name__ == "__main__":

@@ -25,10 +25,10 @@ workflow {
             // Now each row is a Groovy map with column names as keys
             def filterbank_files = row.filterbank_files.trim() // Trim leading and trailing spaces
             def target = row.target.trim()
-            def beam_id = row.beam_num.trim()
+            def beam_name = row.beam_name.trim()
             def pointing_id = row.pointing_id.trim()
             def utc_start = row.utc_start.trim().replace(" ", "-") // Replace space with dash in utc_start
-            return tuple(filterbank_files, target, pointing_id, beam_id, utc_start)
+            return tuple(filterbank_files, target, pointing_id, beam_name, utc_start)
         }
 
     // Process the filterbank file with filtool
@@ -99,10 +99,10 @@ workflow {
             return tuple(target_name, pointing_id, split_id, beam_name, utc, nearest_power_of_2, params.acc_start, params.acc_end)
         }
     }
-    // max_acceleration_output.view()  
+
     // Launch peasoup
     peasoup_channel = max_acceleration_output.combine(dm_files_channel)
-    // peasoup_channel.view()
+
     peasoup_output = peasoup(peasoup_channel, params.total_cands_limit, params.min_snr, params.ram_limit_gb, params.nh, params.ngpus, params.kill_file)
 
     unique_fil_name = peasoup_output
@@ -113,7 +113,7 @@ workflow {
             // Return a tuple with the base name and the original file path for grouping
             return tuple(fil_base_name, fil_file)
         }
-        // Group by the 5th element of the tuple, which is fil_base_name
+        // Group by the 0th element of the tuple, which is fil_base_name
         .groupTuple(by: 0)
         .map { fil_base_name, fil_files->
             // fil_files is a list now, we select the first one
@@ -129,9 +129,8 @@ workflow {
             def fil_base_name = fil_file.getBaseName()
             return tuple(fil_base_name, target_name, pointing_id, split_id, dm_range, beam_name, utc, dm_file, fil_file, xml_file)
         }
-    //
-    // Aggreagate the peasoup output based on pointing_id and beam name. 
-    // This essentially aggregates all candidates from the different DM subdivisions
+
+    // Aggreagate the peasoup output based on pointing_id
     grouped_peasoup_output = peasoup_no_filname.combine(unique_fil_name, by: 0)
     .map {fil_base_name, target_name, pointing_id, split_id, dm_range, beam_name, utc, dm_file, fil_file, xml_file, first_fil_file->
         
@@ -139,46 +138,45 @@ workflow {
     }.groupTuple(by: [0, 1, 2, 5])
     // Convert the xmls into a single cvs file
     aggregated_peasoup_output = aggregate_peasoup_output(grouped_peasoup_output)
-
-    // Sifting
+    
+    // // Sifting
     sifted_candidates = sift_candidates(aggregated_peasoup_output)
-    // sifted_candidates.view()
-    to_fold = aggregated_peasoup_output
-    .flatMap { tuple ->
-        def(target_name, pointing_id, split_id, dm_range, beam_names, utc, fil_files, cand_file, meta_file) = tuple
 
+    beam_channels = sifted_candidates.flatMap{ tuple ->
+        def( target_name, pointing_id, split_id, beam_names, utc, fil_files, csv_files, meta_file) = tuple
         // Convert `fil_files` and `dm_range` to lists if they are not already lists
         fil_files = fil_files instanceof List ? fil_files : [fil_files]
-        dm_range = dm_range instanceof List ? dm_range : [dm_range]
         beam_names = beam_names instanceof List ? beam_names : [beam_names]
-
+        csv_files = csv_files instanceof List ? csv_files : [csv_files]
+    
         def result = []
-        for (int i = 0; i < fil_files.size(); i++) {
-            result << [target_name, pointing_id, split_id, dm_range[i], beam_names[i], utc, fil_files[i], cand_file, meta_file ]
+        for (int i = 0; i < beam_names.size(); i++) {
+            def matching_csv = csv_files.find { it.name.contains(beam_names[i]) }
+            result << [target_name, pointing_id, split_id, beam_names[i], utc, fil_files[i], matching_csv, meta_file ]
         }
-        // fil_files.zip(beam_names).collect { fil_file, beam_name -> [target_name, pointing_id, split_id, beam_name, utc, fil_file, cand_file, meta_file] }
-    return result
+        return result
     }
 
     // Pulsarx folding
-    pulsarx_output = fold_peasoup_cands_pulsarx(to_fold)
+    pulsarx_output = fold_peasoup_cands_pulsarx(beam_channels)
 
-    // Now, we group all of the
-    grouped_by_beam = pulsarx_output.groupTuple(by: [0, 1, 2])
-    .map{target_name, pointing_id, split_id, dm_range, beam_names, utc, meta_files, archive_files, png_files, candfiles, cands_files ->
+    // PICS classification
+    classified_candidates = classify_candidates(pulsarx_output)
+
+    // Group the classified candidates by the pointing and split
+    grouped_by_beam = classified_candidates.groupTuple(by: [0, 1, 2])
+    .map{target_name, pointing_id, split_id, beam_names, utc, archive_files, png_files, candfiles, cands_files, classified_candfile ->
         def flat_archive_files = archive_files.flatten()
         def flat_png_files = png_files.flatten()
         def flat_candfiles = candfiles.flatten()
         def flat_cands_files = cands_files.flatten()
-        def meta_file = meta_files[0]
+        def flat_classified_candfile = classified_candfile.flatten()
 
-        return tuple(target_name, pointing_id, split_id, dm_range, beam_names, utc, meta_file, flat_archive_files, flat_png_files, flat_candfiles, flat_cands_files)
+        return tuple(target_name, pointing_id, split_id, beam_names, utc, flat_archive_files, flat_png_files, flat_candfiles, flat_cands_files, flat_classified_candfile)
     }
-    grouped_by_beam.view()
 
-    classified_candidates = classify_candidates(grouped_by_beam)
-
-    tar_output = create_tar_archive(classified_candidates, params.metafile)
+    // Create a tar archive for each pointing and split
+    create_tar_archive(grouped_by_beam, params.metafile)
     
 
 }

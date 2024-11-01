@@ -1,4 +1,4 @@
-def filter_clusters(df_cands, df_clusters, config, output):
+def filter_clusters(df_cands, df_clusters, config):
     # Filter out bad candidates
     # Creating a class to do the filtering might make things simpler..
     min_decay_value = config['min_spatial_decay']
@@ -29,22 +29,16 @@ def filter_clusters(df_cands, df_clusters, config, output):
             df_cands.loc[df_cands['cluster_id']
                          == cluster_id, 'low_nassoc'] = 1
 
-    print(f"Clusters: {len(df_clusters)}")
-    print(f"RFI Clusters: {len(df_clusters[df_clusters['spatial_rfi']==1])}")
-    print(f"RFI Files: {len(df_cands[df_cands['spatial_rfi']==1])}")
-    print(f"Low nassoc files: {len(df_cands[df_cands['low_nassoc']==1])}")
+    # print(f"Clusters: {len(df_clusters)}")
+    # print(f"RFI Clusters: {len(df_clusters[df_clusters['spatial_rfi']==1])}")
+    # print(f"RFI Files: {len(df_cands[df_cands['spatial_rfi']==1])}")
+    # print(f"Low nassoc files: {len(df_cands[df_cands['low_nassoc']==1])}")
 
-    good_files = df_cands[(df_cands['spatial_rfi'] == 0) &
-                          (df_cands['low_nassoc'] == 0)]
-
-    good_files.to_csv(f"{output}_good_cands.csv")    
-    good_files[good_files['strongest_in_cluster']==1].to_csv(
-        f"{output}_good_cands_to_fold.csv")    
-
-    # Good files == neither RFI nor low nassoc
-    print(f"Good Files: {len(good_files)}")
-    # Good files to fold == good files which are the strongest in their cluster
-    print(
-        f"Good Files to fold: {len(good_files[good_files['strongest_in_cluster']==1])}")
-
-    return df_cands, df_clusters
+    
+    # Filter out the strongest candidate in each cluster that is not spatial RFI
+    # or has low nassoc
+    to_fold = df_cands[(df_cands['spatial_rfi'] == 0) &
+                          (df_cands['low_nassoc'] == 0) &
+                          (df_cands['strongest_in_cluster'] == 1)]
+ 
+    return to_fold

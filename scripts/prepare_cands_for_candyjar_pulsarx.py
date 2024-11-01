@@ -1,6 +1,5 @@
 import pandas as pd
 import argparse
-from astropy.time import Time
 import os
 import fnmatch
 import shutil
@@ -139,14 +138,19 @@ def process_dir(input_dir, output_dir, beam_name=None):
 
     # Find cands and pics in the original directory
     input_candfiles = glob(os.path.join(input_dir, '*.cands'))
-    input_pics_filename = glob(os.path.join(input_dir, 'pics_scores.csv'))[0]
+    input_pics_filenames = glob(os.path.join(input_dir, '*_scored.csv'))
+    
+    pics_dfs = []
+    for pics_file in input_pics_filenames:
+        df = get_pics_vals(pics_file)
+        pics_dfs.append(df)
+    pics_df = pd.concat(pics_dfs)
+    pics_df = pics_df.drop(columns=['filename'])
 
     cands_dfs = []
     for candfile in input_candfiles:
         cands_dfs.append(parse_cands(candfile))
     cands_df = pd.concat(cands_dfs)
-    pics_df = get_pics_vals(input_pics_filename)
-    pics_df = pics_df.drop(columns=['filename'])
     
     # Merge the two dataframes  
     merged_df = cands_df.merge(pics_df, on=['id', 'beam_name'], how='inner')
@@ -216,7 +220,7 @@ def main(args):
     DM_str = input_dir.split('/')[-1]
     beam_name = input_dir.split('/')[-2]
     
-    tarball_name = f"{output_dir}/{beam_name}_{DM_str}.tar.gz"
+    tarball_name = os.path.join(output_dir, args.name)
 
     total_df['candidate_tarball_path'] = tarball_name
 
@@ -248,6 +252,8 @@ arg_parser.add_argument("-m", "--meta", dest="meta_path",
 arg_parser.add_argument("-p", "--pointing_id", help="Pointing ID", required=True)
 arg_parser.add_argument("-o", "--outdir", help="Output tarball",
                         default=os.getcwd()) 
+arg_parser.add_argument("-n", "--name", help="Name of the output tarball",
+                        default="candidates.tar.gz")
 arg_parser.add_argument("-v", "--verbose", action="store_true",help="Verbose output")
 arg_parser.add_argument("-g", '--global_beams', action='store_true',
                         default=False,
